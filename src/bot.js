@@ -63,6 +63,10 @@ client.on('interactionCreate', async (interaction) => {
             let targ = options.getUser('target');
             let avatar = targ.avatarURL();
             if(avatar != null){
+                const embed = new MessageEmbed()
+                    .setImage(avatar)
+                    .setTitle('Here you go:')
+                    .setURL(avatar)
                 interaction.reply({
                     content: 'Here you go: [link](' + avatar + ')',
                 });
@@ -178,7 +182,9 @@ client.on('interactionCreate', async (interaction) => {
                 });
             }
             break;
-        default:
+        case 'info':
+            break;
+            default:
             interaction.reply({
                 content: 'There seems to be an issue, I don\'t recognize this command.',
                 ephemeral: true,
