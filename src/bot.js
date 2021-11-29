@@ -15,6 +15,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 const dbFile = "./src/db.json";
+const serverdbFile = "./src/servers.json";
 
 var testGuild;
 client.on('ready', () => {
@@ -30,6 +31,8 @@ client.on('ready', () => {
     }else{
         if(SET){
             reloadCmds();
+        }else{
+            loadCmds();
         }
     }
     //setCommands(commands, false);
@@ -38,7 +41,6 @@ client.on('ready', () => {
 
 //#region ON ADD TO SERVER
 client.on('guildCreate', guild => {
-    guild.systemChannel.send(`Thanks for inviting me!`);
     setCommands(true, guild);
   });
 //#endregion
@@ -50,7 +52,6 @@ client.on('interactionCreate', async (interaction) => {
     }
     const { commandName, options } = interaction;
 
-    db = JSON.parse(fs.readFileSync(dbFile, "utf8"));
     initDb(interaction);
 
     switch (commandName){
@@ -214,7 +215,12 @@ client.on('interactionCreate', async (interaction) => {
                         },
                     );
                     if(guildTarg.roles.cache.size - 1 != 0){
-                        
+                        embed.addField(
+                            {
+                                name: 'Roles:',
+                                value: `${guildTarg.roles.map(r => `${r}`).join(' | ')}`
+                            }
+                        )
                     }
                 interaction.reply({
                     embeds: [ embed ],
@@ -236,6 +242,7 @@ client.on('interactionCreate', async (interaction) => {
 //#endregion
 
 function initDb(inter){
+    db = JSON.parse(fs.readFileSync(dbFile, "utf8"));
     if(!db[inter.member.user.id]){
         db[inter.member.user.id] = {
             name: inter.member.user.tag,
@@ -243,7 +250,20 @@ function initDb(inter){
         }
         fs.writeFile(dbFile, JSON.stringify(db), (x) => {
             if (x) console.error(x)
-          });
+        });
+    }
+}
+
+function initServerDb(server){
+    let serverdb = JSON.parse(fs.readFileSync(serverdbFile, "utf8"));
+    if(!serverdb[0]){
+        serverdb[0] = {
+            cmds: true,
+        }
+        fs.writeFile(serverdbFile, JSON.stringify(serverdb), (x) => {
+            if (x) console.error(x)
+        });
+        setCommands(true, server);
     }
 }
 
@@ -296,12 +316,20 @@ function setCommands(single, cmdGuild){
             type: 6
         }],
     });
-    
+
+
+}
+
+function loadCmds(){
+    client.guilds.cache.forEach(Iguild => {
+        initServerDb(Iguild);
+    });
 }
 
 function reloadCmds(){
     client.guilds.cache.forEach(Iguild => {
         setCommands(true, Iguild);
+        initServerDb(Iguild);
     });
 }
 
