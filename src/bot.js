@@ -15,7 +15,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 const dbFile = "./src/db.json";
-const serverdbFile = "./src/servers.json";
+const serverdbFile = "./src/serverDB.json";
 
 var testGuild;
 client.on('ready', () => {
@@ -254,16 +254,16 @@ function initDb(inter){
     }
 }
 
-function initServerDb(server){
+function initServerDb(initGuild){
     let serverdb = JSON.parse(fs.readFileSync(serverdbFile, "utf8"));
-    if(!serverdb[0]){
-        serverdb[0] = {
+    if(!serverdb[initGuild.name]){
+        serverdb[initGuild.name] = {
             cmds: true,
         }
-        fs.writeFile(serverdbFile, JSON.stringify(serverdb), (x) => {
+        setCommands(true, initGuild);
+        fs.writeFile(serverdbFile, JSON.stringify('{}'), (x) => {
             if (x) console.error(x)
         });
-        setCommands(true, server);
     }
 }
 
