@@ -21,7 +21,7 @@ client.on('ready', () => {
     console.log(`BOT: ${client.user.tag} IS LOGGED IN AND READY`);
     //#region SLASH CMDS
     const TEST = false;
-    const SET = true;
+    const SET = false;
     const testGuildID = "882015119498940456";
     testGuild = client.guilds.cache.get(testGuildID);
 
@@ -60,15 +60,15 @@ client.on('interactionCreate', async (interaction) => {
             });
             break;
         case 'pfp':
-            let targ = options.getUser('target');
-            let avatar = targ.avatarURL();
+            let user = options.getUser('target');
+            let avatar = user.avatarURL();
             if(avatar != null){
-                const embed = new MessageEmbed()
+                let embed = new MessageEmbed()
                     .setImage(avatar)
                     .setTitle('Here you go:')
                     .setURL(avatar)
                 interaction.reply({
-                    content: 'Here you go: [link](' + avatar + ')',
+                    embeds: [ embed ],
                 });
             }else{
                 interaction.reply({
@@ -119,16 +119,16 @@ client.on('interactionCreate', async (interaction) => {
                 });
                 var postChildren = [];
                 var index = response.data.children[Math.floor(Math.random() * (response.data.children.length-1)) + 1].data
-                const isImage = index.post_hint === "image";
-                const subRedditName = index.subreddit_name_prefixed;
-                const title = index.title;
-                const link = 'https://reddit.com' + index.permalink;
-                const text = !isImage && index.selfText;
-                const desc = `[${title}](${link})`;
-                const img = index.preview.images[0].source.url.replace('&amp;', '&');
+                var isImage = index.post_hint === "image";
+                var subRedditName = index.subreddit_name_prefixed;
+                var title = index.title;
+                var link = 'https://reddit.com' + index.permalink;
+                var text = !isImage && index.selfText;
+                var desc = `[${title}](${link})`;
+                var img = index.preview.images[0].source.url.replace('&amp;', '&');
                 
                 
-                const embed = new MessageEmbed()
+                let embed = new MessageEmbed()
                     .setTitle(subRedditName)
                     .setColor(9384170)
                     .setDescription(desc + (text ? `\n\n${text}` : ""))
@@ -183,8 +183,49 @@ client.on('interactionCreate', async (interaction) => {
             }
             break;
         case 'info':
+            let targ = options.getUser('target');
+            let guildTarg = interaction.guild.members.cache.get(targ.id);
+            if(!targ.bot){
+                let avatar = targ.avatarURL();
+                if(avatar == null){
+                    avatar = targ.defaultAvatarURL;
+                }
+                let dateCreated = new Date(targ.createdTimestamp);
+                let dateJoined = new Date(guildTarg.joinedTimestamp);
+                let embed = new MessageEmbed()
+                    .setTitle(`Info for ${targ.username}:`)
+                    .setImage(avatar)
+                    .addFields(
+                        {
+                            name: 'Tag:',
+                            value: `${targ.tag}`
+                        },
+                        {
+                            name: `Date account created:`,
+                            value: `${dateCreated}`
+                        },
+                        {
+                            name: `Date joined server:`,
+                            value: `${dateJoined}`
+                        },
+                        {
+                            name: `Role count:`,
+                            value: `${guildTarg.roles.cache.size - 1}`
+                        },
+                    );
+                    if(guildTarg.roles.cache.size - 1 != 0){
+                        
+                    }
+                interaction.reply({
+                    embeds: [ embed ],
+                });
+            }else{
+                interaction.reply({
+                    content: `Sorry, but it seems that ${targ.username} is a bot account.`,
+                });
+            }
             break;
-            default:
+        default:
             interaction.reply({
                 content: 'There seems to be an issue, I don\'t recognize this command.',
                 ephemeral: true,
@@ -244,6 +285,15 @@ function setCommands(single, cmdGuild){
             description: 'Do not include \"r/\"',
             required: true,
             type: 3,
+        }],
+    });
+    commands.create({name: 'info',
+        description: 'Get info on a user.',
+        options: [{
+            name: 'target',
+            description: 'user',
+            required: true,
+            type: 6
         }],
     });
     
