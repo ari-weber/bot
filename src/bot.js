@@ -7,6 +7,7 @@ const { doesNotMatch } = require('assert');
 const { Client, Intents, Interaction, DiscordAPIError } = require('discord.js');
 const { MessageEmbed } = require('discord.js');
 const fs = require('fs');
+const fsPromise = fs.promises;
 const { JSDOM } = require( "jsdom" );
 const { window } = new JSDOM( "" );
 const $ = require( "jquery" )( window );
@@ -257,13 +258,14 @@ async function initServerDb(initGuild){
     console.log("a");
     let serverdb = await JSON.parse(fs.readFileSync(serverdbFile, "utf8"));
     console.log("b");
-    if(!serverdb[initGuild.id]){
+    if(!serverdb[initGuild.name]){
         console.log("c");
-        serverdb[initGuild.id] = {
+        serverdb[initGuild.name] = {
             cmds: true,
+            id: initGuild.id,
         }
         console.log("d");
-        fs.writeFile(serverdbFile, JSON.stringify(serverdb), (x) => {
+        await fsPromise.writeFile(serverdbFile, JSON.stringify(serverdb), (x) => {
             if (x) console.error(x)
         });
         console.log("e");
