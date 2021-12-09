@@ -18,8 +18,7 @@ const dbFile = "./src/db.json";
 const serverdbFile = "./src/serverDB.json";
 
 var testGuild;
-client.on('ready', () => {
-    console.log(`BOT: ${client.user.tag} IS LOGGED IN AND READY`);
+client.on('ready', async () => {
     //#region SLASH CMDS
     const TEST = false;
     const SET = false;
@@ -30,13 +29,13 @@ client.on('ready', () => {
         setCommands(true, testGuild);
     }else{
         if(SET){
-            reloadCmds();
+            const awaiting = await reloadCmds();
         }else{
-            loadCmds();
+            const awaiting = await loadCmds();
         }
     }
-    //setCommands(commands, false);
     //#endregion
+    console.log(`BOT: ${client.user.tag} IS LOGGED IN AND READY`);
 });
 
 //#region ON ADD TO SERVER
@@ -241,7 +240,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 //#endregion
 
-function initDb(inter){
+async function initDb(inter){
     db = JSON.parse(fs.readFileSync(dbFile, "utf8"));
     if(!db[inter.member.user.id]){
         db[inter.member.user.id] = {
@@ -254,20 +253,26 @@ function initDb(inter){
     }
 }
 
-function initServerDb(initGuild){
-    let serverdb = JSON.parse(fs.readFileSync(serverdbFile, "utf8"));
-    if(!serverdb[initGuild.name]){
-        serverdb[initGuild.name] = {
+async function initServerDb(initGuild){
+    console.log("a");
+    let serverdb = await JSON.parse(fs.readFileSync(serverdbFile, "utf8"));
+    console.log("b");
+    if(!serverdb[initGuild.id]){
+        console.log("c");
+        serverdb[initGuild.id] = {
             cmds: true,
         }
-        setCommands(true, initGuild);
-        fs.writeFile(serverdbFile, JSON.stringify('{}'), (x) => {
+        console.log("d");
+        fs.writeFile(serverdbFile, JSON.stringify(serverdb), (x) => {
             if (x) console.error(x)
         });
+        console.log("e");
+        setCommands(true, initGuild);
+        console.log("f");
     }
 }
 
-function setCommands(single, cmdGuild){
+async function setCommands(single, cmdGuild){
     let commands;
     if(single){
         commands = cmdGuild.commands;
@@ -320,17 +325,33 @@ function setCommands(single, cmdGuild){
 
 }
 
-function loadCmds(){
-    client.guilds.cache.forEach(Iguild => {
-        initServerDb(Iguild);
-    });
+async function loadCmds(){
+    console.log("1");
+    /*client.guilds.cache.forEach(Iguild => {
+        conosole.log("2");
+        const awaiting = await initServerDb(testGuild);
+        console.log("3");
+    });*/
+    for(let Iguild of client.guilds.cache.values()){
+        console.log("2");
+        const awaiting = await initServerDb(testGuild);
+        console.log(`${Iguild} \n --------`);
+        //console.log(Iguild);
+        console.log("3");
+    }
+    /*for (let i = 0; i < client.guilds.cache.length; i++) {
+        conosole.log("2");
+        initServerDb(client.guilds.cache[i]);
+        console.log("3");
+        //const awaiting = await initServerDb(testGuild);
+    }*/
 }
 
-function reloadCmds(){
-    client.guilds.cache.forEach(Iguild => {
-        setCommands(true, Iguild);
-        initServerDb(Iguild);
-    });
+async function reloadCmds(){
+    //client.guilds.cache.forEach(Iguild => {
+    //    setCommands(true, Iguild);
+    //    initServerDb(testGuild);
+    //});
 }
 
 client.login(process.env.BOT_TOKEN);
